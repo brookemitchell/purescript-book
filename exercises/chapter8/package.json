@@ -7,6 +7,8 @@
   "author": "Phil Freeman",
   "license": "Creative,Commons,Attribution-NonCommercial-ShareAlike,4.0,International,License",
   "dependencies": {
+    "bower": "^1.8.2",
+    "pulp": "^12.0.1",
     "react": "^0.14.8",
     "react-dom": "^0.14.6"
   }

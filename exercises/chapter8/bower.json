@@ -24,5 +24,8 @@
     "purescript-react": "^3.0.0",
     "purescript-strings": "^3.0.0",
     "purescript-validation": "^3.0.0"
+  },
+  "devDependencies": {
+    "purescript-psci-support": "^3.0.0"
   }
 }
