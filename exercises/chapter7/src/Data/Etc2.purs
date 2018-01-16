@@ -12,7 +12,9 @@ combineList :: forall f a. Applicative f => List (f a) -> f (List a)
 combineList (Cons x xs) = Cons <$> x <*> combineList xs
 combineList Nil = pure Nil
 
-el1 = (Just 1 : Just 2 : Nil)
+el1 :: List (Maybe Int)
+el1 = (Just 1 : Nil)
+combineEx :: Maybe (List Int)
 combineEx = combineList el1
 
 -- (Easy) Use lift2 to write lifted versions of the numeric operators +, -, * and / which work with optional arguments.

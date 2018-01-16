@@ -3,6 +3,7 @@ module Data.Etc where
 import Prelude
 
 import Data.Array (foldM, head, tail, nub, sort)
+import Data.List (List(..), (:))
 import Data.Maybe (Maybe(..))
 
 -- (Easy) Look up the types of the head and tail functions from the Data.Array module in the purescript-arrays package. Use do notation with the Maybe monad to combine these functions into a function third which returns the third element of an array with three or more elements. Your function should return an appropriate Maybe type.
@@ -61,6 +62,7 @@ leftId = do
 
 -- The last law is the associativity law. It tells us how to deal with nested do notation blocks. It states that the following piece of code:
 
+-- TODO
 -- c1 = do
 --   y <- do
 --     x <- m1
@@ -76,13 +78,23 @@ leftId = do
 
 -- Each of these computations involves three monadic expression m1, m2 and m3. In each case, the result of m1 is eventually bound to the name x, and the result of m2 is bound to the name y.
 
-
-
 test :: Maybe Int
 test = do
   x <- pure 1
-  -- f x -- next
   (\y -> Just (y + 1)) x
 
-
 -- todo: other 8.7 exercises
+-- 5. (Medium) Write a function filterM which generalizes the filter function on lists. Your function should have the following type signature:
+-- Test your function in PSCi using the Maybe and Array monads.
+filterM :: forall m a. Monad m => (a -> m Boolean) -> List a -> m (List a)
+filterM f Nil = pure Nil
+filterM f (Cons x xs)  = do
+  isGood <- f x
+  xs' <- filterM f xs
+  pure if isGood then (x : xs') else xs'
+
+
+t1 :: List Int
+t1 = (1 : 2 : 3 : Nil)
+
+ex99 = filterM (\x -> Just (x < 3)) t1
