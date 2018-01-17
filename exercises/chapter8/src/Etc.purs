@@ -2,6 +2,8 @@ module Data.Etc where
 
 import Prelude
 
+import Control.Monad.Eff (Eff)
+import Control.Monad.Eff.Exception (EXCEPTION, error, throw, throwException)
 import Data.Array (foldM, head, tail, nub, sort)
 import Data.List (List(..), (:))
 import Data.Maybe (Maybe(..))
@@ -98,3 +100,30 @@ t1 :: List Int
 t1 = (1 : 2 : 3 : Nil)
 
 ex99 = filterM (\x -> Just (x < 3)) t1
+
+-- 6. (Difficult) Every monad has a default Functor instance given by:
+--  map f a = do
+--    x <- a
+--    pure (f x)
+-- Use the monad laws to prove that for any monad, the following holds:
+
+--  lift2 f (pure a) (pure b) = pure (f a b)
+-- where the Applicative instance uses the ap function defined above. Recall that lift2 was defined as follows:
+
+--  lift2 :: forall f a b c. Applicative f => (a -> b -> c) -> f a -> f b -> f c
+--  lift2 f a b = f <$> a <*> b
+
+-- TODO:
+-- Monad laws:
+-- Left Identity
+-- Right Identity
+-- Associativity
+
+-- 8.17
+-- (Medium) Rewrite the safeDivide function to throw an exception using throwException if the denominator is zero.
+
+
+safeDivide :: forall eff. Int -> Int -> Eff (exception :: EXCEPTION | eff) Int
+safeDivide x 0 = throwException $ error "Denominator must not be zero"
+safeDivide x y = pure $ x / y
+

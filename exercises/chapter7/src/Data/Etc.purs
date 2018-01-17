@@ -20,7 +20,7 @@ instance functorTree :: Functor Tree where
   map f (Branch left val right) = Branch (map f left) (f val) (map f right)
 
 
-instance foldableTree :: Foldable (Tree) where
+instance foldableTree :: Foldable Tree where
   foldr f = foldrDefault f
   foldl f = foldlDefault f
   foldMap _ Leaf = mempty
