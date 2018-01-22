@@ -5,31 +5,31 @@ import Prelude
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Console (CONSOLE, log)
 import Control.Monad.Except (runExcept)
-import Data.AddressBook (Address(..), Person(..), PhoneNumber(..), examplePerson)
-import Data.AddressBook.Validation (Errors, validatePerson')
-import Data.Array ((..), length, modifyAt, zipWith)
-import Data.Either (Either(..))
-import Data.Foldable (for_)
-import Data.Foreign (ForeignError, readString, toForeign)
-import Data.Foreign.Index (index)
-import Data.Maybe (fromJust, fromMaybe)
-import Data.List.NonEmpty (NonEmptyList)
-import DOM (DOM())
+import DOM (DOM)
 import DOM.HTML (window)
 import DOM.HTML.Types (htmlDocumentToDocument)
 import DOM.HTML.Window (document)
 import DOM.Node.NonElementParentNode (getElementById)
 import DOM.Node.Types (ElementId(..), documentToNonElementParentNode)
+import Data.AddressBook (Address(..), Person(..), PhoneNumber(..), PhoneType(..), examplePerson)
+import Data.AddressBook.Validation (Errors', Field(..), ValidationError(..), validatePerson')
+import Data.Array ((..), length, modifyAt, zipWith, elem)
+import Data.Either (Either(..))
+import Data.Foldable (for_)
+import Data.Foreign (ForeignError, readString, toForeign)
+import Data.Foreign.Index (index)
+import Data.List.NonEmpty (NonEmptyList)
+import Data.Maybe (fromJust, fromMaybe)
 import Partial.Unsafe (unsafePartial)
-import React (ReactClass, ReadWrite, ReactState, Event, ReactThis,
-              createFactory, readState, spec, createClass, writeState)
+import React (Event, ReactClass, ReactElement, ReactState, ReactThis, ReadWrite, createClass, createFactory, spec, writeState, readState)
 import React.DOM as D
 import React.DOM.Props as P
 import ReactDOM (render)
 
+
 newtype AppState = AppState
   { person :: Person
-  , errors :: Errors
+  , errors :: Errors'
   }
 
 initialState :: AppState
@@ -62,19 +62,27 @@ updateAppState ctx update e =
       Left errors -> writeState ctx (AppState { person: newPerson, errors: errors })
       Right _ -> writeState ctx (AppState { person: newPerson, errors: [] })
 
+fieldWithErrors :: Field → Errors' → ReactElement → ReactElement
+fieldWithErrors field errors children =
+  D.div [ P.className "form-group" ] [
+    children
+    , if test then D.div [ P.className "alert alert-danger" ] [ D.text "uhuh" ] else D.div [] []
+    ]
+  where
+    dumDum = ValidationError "" field
+    test = elem dumDum errors
+
+renderValidationError (ValidationError errTxt _) = D.div [ P.className "alert alert-danger" ] [ D.text errTxt ]
+
+renderValidationErrors [] = []
+renderValidationErrors xs = [ D.div [] (map renderValidationError xs)]
+
 addressBook :: forall props. ReactClass props
 addressBook = createClass $ spec initialState \ctx -> do
   AppState { person: Person person@{ homeAddress: Address address }, errors } <- readState ctx
 
-  let renderValidationError err = D.div [ P.className "alert alert-danger" ] [ D.text err ]
-
-      renderValidationErrors [] = []
-      renderValidationErrors xs =
-        [ D.div [] (map renderValidationError xs)
-        ]
-
-      formField name hint value update =
-        D.div [ P.className "form-group" ]
+  let formField name hint value update =
+        D.div []
               [ D.label [ P.className "col-sm-2 control-label" ]
                         [ D.text name ]
               , D.div [ P.className "col-sm-3" ]
@@ -88,7 +96,7 @@ addressBook = createClass $ spec initialState \ctx -> do
               ]
 
       renderPhoneNumber (PhoneNumber phone) index =
-        formField (show phone."type") "XXX-XXX-XXXX" phone.number \s ->
+        fieldWithErrors (PhoneField HomePhone) errors $ formField (show phone."type") "XXX-XXX-XXXX" phone.number \s ->
           Person $ person { phones = fromMaybe person.phones $ modifyAt index (updatePhoneNumber s) person.phones }
 
       updateFirstName s = Person $ person { firstName = s }
@@ -103,19 +111,17 @@ addressBook = createClass $ spec initialState \ctx -> do
   pure $
     D.div [ P.className "container" ]
           [ D.div [ P.className "row" ]
-                  (renderValidationErrors errors)
-          , D.div [ P.className "row" ]
                   [ D.form [ P.className "form-horizontal" ] $
                            [ D.h3' [ D.text "Basic Information" ]
 
-                           , formField "First Name" "First Name" person.firstName updateFirstName
-                           , formField "Last Name"  "Last Name"  person.lastName  updateLastName
+                           , fieldWithErrors FirstNameField errors $ formField "First Name" "First Name" person.firstName updateFirstName
+                           , fieldWithErrors LastNameField errors $ formField "Last Name"  "Last Name"  person.lastName  updateLastName
 
                            , D.h3' [ D.text "Address" ]
 
-                           , formField "Street" "Street" address.street updateStreet
-                           , formField "City"   "City"   address.city   updateCity
-                           , formField "State"  "State"  address.state  updateState
+                           , fieldWithErrors StreetField errors $ formField "Street" "Street" address.street updateStreet
+                           , fieldWithErrors CityField errors $ formField "City"   "City"   address.city   updateCity
+                           , fieldWithErrors StateField errors $ formField "State"  "State"  address.state  updateState
 
                            , D.h3' [ D.text "Contact Information" ]
                            ]
