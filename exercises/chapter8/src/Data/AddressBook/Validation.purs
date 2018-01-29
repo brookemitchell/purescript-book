@@ -1,9 +1,5 @@
 module Data.AddressBook.Validation where
 
--- (Difficult, Extended) One problem with this user interface is that the validation errors are not displayed next to the form fields they originated from. Modify the code to fix this problem.
--- Hint: the error type returned by the validator should be extended to indicate which field caused the error. You might want to use the following modified Errors type:
-
-
 import Prelude
 
 import Data.AddressBook (Address(..), Person(..), PhoneNumber(..), PhoneType(..), address, person, phoneNumber)
